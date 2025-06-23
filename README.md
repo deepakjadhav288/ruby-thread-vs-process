@@ -1,130 +1,106 @@
-# Ruby Observability Demo App
+# Ruby Thread vs Process Analysis Demo App
 
-A comprehensive Ruby application demonstrating observability patterns with Sidekiq, Prometheus metrics, and memory profiling.
+A Ruby application demonstrating the performance differences between threads and processes for different types of workloads through benchmarking and detailed analysis.
 
-## Features
+## What This Repository Contains
 
-- **Sidekiq**: Background job processing with Redis
-- **Prometheus Metrics**: Custom metrics collection and export
-- **Memory Profiling**: Memory usage analysis and optimization
-- **Structured Logging**: JSON-formatted logs for better parsing
-- **Performance Monitoring**: CPU and memory profiling tools
+This repository contains Ruby scripts that benchmark and analyze the performance characteristics of threads vs processes for different workload types:
 
-## Setup
+### **CPU-Bound Tasks**
+- `cpu_bound_task.rb` - CPU-intensive prime number calculations
 
-### Prerequisites
+### **I/O-Bound Tasks**
+- `io_bound_task.rb` - HTTP request benchmarking using external API calls
 
-- Ruby 3.2.1
-- Redis server
-- Bundler
+### **Analysis Documentation**
+- `io_bound_task_benchmark.md` - Detailed analysis of I/O-bound task results
+- `cpu_bound_task_benchmark.md` - Detailed analysis of CPU-bound task results
 
-### Installation
+## Key Findings
 
-1. **Install dependencies:**
-   ```bash
-   bundle install
-   ```
+### **I/O-Bound Tasks (Threads Win)**
+- Threads are **47.6% faster** than processes for HTTP requests
+- Lower CPU overhead and resource usage
+- Better suited for network operations, database queries, file I/O
 
-2. **Start Redis:**
-   ```bash
-   redis-server
-   ```
+### **CPU-Bound Tasks (Processes Win)**
+- Processes are **136.8% faster** than threads for CPU-intensive calculations
+- True parallelism bypasses Ruby's Global Interpreter Lock (GIL)
+- Better utilization of multiple CPU cores
 
-3. **Start the Prometheus metrics exporter:**
-   ```bash
-   bundle exec ruby prometheus_exporter.rb
-   ```
+## Prerequisites
 
-4. **Start Sidekiq worker:**
-   ```bash
-   bundle exec sidekiq -r ./config/sidekiq.rb
-   ```
+- Ruby 3.2.1 or higher
+- Internet connection (for I/O-bound task testing)
 
-5. **Run the application:**
-   ```bash
-   bundle exec ruby app.rb
-   ```
+## How to Clone and Run
 
-## Usage
-
-### Triggering Jobs
-
-```ruby
-# In IRB or your application
-require './app'
-require './workers/sample_worker'
-
-# Enqueue a job
-SampleWorker.perform_async("test_data")
-
-# Enqueue a memory-intensive job
-MemoryIntensiveWorker.perform_async("large_dataset")
+### 1. Clone the Repository
+```bash
+git clone https://github.com/yourusername/ruby_observability_app.git
+cd ruby_observability_app
 ```
 
-### Memory Profiling
+### 2. Run the Benchmarking Scripts
 
-```ruby
-# Profile memory usage
-require './lib/memory_profiler_helper'
-
-MemoryProfilerHelper.profile do
-  # Your code here
-  SampleWorker.new.perform("test")
-end
+#### **CPU-Bound Task**
+```bash
+ruby cpu_bound_task.rb
 ```
 
-### Viewing Metrics
+#### **I/O-Bound Task**
+```bash
+ruby io_bound_task.rb
+```
 
-- **Prometheus metrics**: http://localhost:9394/metrics
-- **Sidekiq web UI**: http://localhost:8080
+### 3. View the Analysis
+After running the scripts, you can review the detailed analysis in:
+- `io_bound_task_benchmark.md` - I/O-bound task analysis
+- `cpu_bound_task_benchmark.md` - CPU-bound task analysis
+
+## Understanding the Results
+
+### **Benchmark Output Format**
+Each script outputs `Benchmark::Tms` objects with:
+- `@real` - Wall clock time (actual elapsed time)
+- `@utime` - CPU time in user mode
+- `@stime` - CPU time in system/kernel mode
+- `@cutime` - CPU time in user mode (children processes)
+- `@cstime` - CPU time in system/kernel mode (children processes)
+- `@total` - Total CPU time
+
+### **What to Look For**
+- **Wall clock time (@real)**: Shows actual performance difference
+- **CPU utilization**: Shows how efficiently resources are used
+- **Child process time**: Shows work distribution in process-based approaches
+
+## Key Insights
+
+### **When to Use Threads**
+- I/O-bound operations (HTTP requests, database queries)
+- Network services and API calls
+- File operations with waiting time
+- Web servers and API clients
+
+### **When to Use Processes**
+- CPU-intensive calculations
+- Large dataset processing
+- Mathematical computations
+- When true parallelism is required
+- When memory isolation is critical
 
 ## Project Structure
 
 ```
 ruby_observability_app/
-├── app.rb                    # Main application entry point
-├── config/
-│   ├── sidekiq.rb           # Sidekiq configuration
-│   └── prometheus.rb        # Prometheus configuration
-├── workers/
-│   ├── sample_worker.rb     # Basic worker example
-│   └── memory_worker.rb     # Memory-intensive worker
-├── lib/
-│   ├── memory_profiler_helper.rb
-│   └── metrics_helper.rb
-├── prometheus_exporter.rb   # Prometheus metrics server
-└── Gemfile
+├── cpu_bound_task.rb              # CPU benchmarking
+├── io_bound_task.rb               # I/O benchmarking
+├── io_bound_task_benchmark.md     # I/O analysis
+├── cpu_bound_task_benchmark.md    # CPU analysis
+├── README.md                      # This file
+└── .gitignore                     # Git ignore patterns
 ```
 
-## Monitoring
+## Contributing
 
-### Metrics Available
-
-- `sidekiq_jobs_total`: Total number of jobs processed
-- `sidekiq_job_duration_seconds`: Job execution time
-- `memory_usage_bytes`: Memory usage per job
-- `redis_connections`: Active Redis connections
-
-### Logs
-
-All logs are in JSON format for easy parsing and analysis.
-
-## Development
-
-### Running Tests
-
-```bash
-bundle exec rspec
-```
-
-### Code Quality
-
-```bash
-bundle exec rubocop
-```
-
-## Troubleshooting
-
-1. **Redis connection issues**: Ensure Redis is running on localhost:6379
-2. **Port conflicts**: Change ports in configuration files if needed
-3. **Memory issues**: Use memory profiling tools to identify bottlenecks 
+Feel free to add more benchmarking scenarios or improve the analysis. This repository serves as a practical demonstration of Ruby concurrency patterns and their performance characteristics. 
