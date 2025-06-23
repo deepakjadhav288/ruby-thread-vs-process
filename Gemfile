@@ -11,10 +11,10 @@ gem 'prometheus_exporter', '~> 2.0'
 gem 'memory_profiler', '~> 1.0'
 gem 'stackprof', '~> 0.2'
 gem 'ruby-prof', '~> 1.4'
+gem 'json', '~> 2.6'
 
 # Logging and monitoring
 gem 'logger', '~> 1.5'
-gem 'json', '~> 2.6'
 
 # Development and testing
 gem 'rake', '~> 13.0'
